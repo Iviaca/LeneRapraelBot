@@ -219,3 +219,4 @@ $RECYCLE.BIN/
 *.xml
 *.mdf
 *.vsidx
+*.config
