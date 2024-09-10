@@ -9,8 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="Lagrange.Core" Version="0.3.0" />
-    <PackageReference Include="log4net" Version="3.0.0-preview.3" />
-    <PackageReference Include="Makabaka" Version="1.2.1.2" />
+    <PackageReference Include="log4net" Version="3.0.0-preview.4" />
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="9.0.0-preview.7.24405.7" />
   </ItemGroup>
 

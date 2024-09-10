@@ -1,4 +1,5 @@
 ﻿using Lagrange.Core;
+using LeneRapraelBot.Utils;
 using System.Net.WebSockets;
 
 namespace LeneRapraelBot
@@ -7,15 +8,9 @@ namespace LeneRapraelBot
     {
         static void Main(string[] args)
         {
-            AutoResetEvent reset = new(false);
 
-            var (ws,uri)=new Utils.WsClient().GetWebsocketInfo();
-
-            using (ws)
-            {
-                
-            }
-
+            WsClient ws = new();
+            ws.Connect();
 
         }
     }
