@@ -10,6 +10,13 @@ namespace LeneRapraelBot
             AutoResetEvent reset = new(false);
 
             var (ws,uri)=new Utils.WsClient().GetWebsocketInfo();
+
+            using (ws)
+            {
+                
+            }
+
+
         }
     }
 }

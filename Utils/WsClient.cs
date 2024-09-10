@@ -10,11 +10,21 @@ namespace LeneRapraelBot.Utils
 {
     public  class WsClient
     {
+        //logger
         log4net.ILog log = log4net.LogManager.GetLogger("ClientWesocketLogger");
+
+        //connection string
         string? connectionString = ConfigurationManager.ConnectionStrings.ToString();
 
+        //client and uri
         ClientWebSocket Ws { get; set; }
         Uri ConnectUri {  get; set; }
+
+        //events
+        public event EventHandler<string> OnConnect;
+        public event EventHandler<string> OnDisconnect;
+        public event EventHandler<string> OnReceive;
+        public event EventHandler<string> OnSend;
 
         public Tuple<ClientWebSocket,Uri> GetWebsocketInfo()
         {
@@ -37,11 +47,11 @@ namespace LeneRapraelBot.Utils
             }
         }
 
-        public async Task ConnAsync(Uri? uri)
+        public async Task ConnAsync()
         {
             if(uri is null)
             {
-                Ws.ConnectAsync()
+                await Ws.ConnectAsync()
             }
         }
     }
