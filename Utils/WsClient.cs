@@ -16,6 +16,7 @@ namespace LeneRapraelBot.Utils
 
         //connection string
         string? connectionString = ConfigurationManager.AppSettings["ConnectionString"];
+        //string? connectionString = ConfigurationManager.AppSettings["ConnectionStringTest"];//Debug
 
         //client and uri
         ClientWebSocket Ws { get; set; }
@@ -56,7 +57,8 @@ namespace LeneRapraelBot.Utils
 
         public string Receive(ClientWebSocket ws)
         {
-            ArraySegment<byte> receivedBufferArray = new ArraySegment<byte>();
+            byte[] buffer = new byte[2048 * 2];
+            ArraySegment<byte> receivedBufferArray = new ArraySegment<byte>(buffer);
             Task receiveTask = ws.ReceiveAsync(receivedBufferArray, CancellationToken.None);
             receiveTask.Wait();//receive bytes
 
@@ -75,6 +77,7 @@ namespace LeneRapraelBot.Utils
                     //OnReceive(Ws, Receive(Ws));
                     string data = Receive(Ws);
                     log.Info($"\n{data}");
+                    Console.WriteLine(data);
                 }
             });
         }
@@ -86,6 +89,19 @@ namespace LeneRapraelBot.Utils
         public void SendMsg(string content)
         {
             Send(Ws, content);
+        }
+
+        public void WaitInputSend()
+        {
+            Task.Run(() =>
+            {
+                while (true)
+                {
+                    Console.WriteLine("Waiting Input");
+                    string? content = Console.ReadLine();
+                    SendMsg(content);
+                }
+            });
         }
 
 

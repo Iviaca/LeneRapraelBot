@@ -8,10 +8,14 @@ namespace LeneRapraelBot
     {
         static void Main(string[] args)
         {
+            AutoResetEvent reset = new(false);
 
             WsClient ws = new();
             ws.Connect();
 
+            ws.WaitInputSend();
+
+            reset.WaitOne();
         }
     }
 }
