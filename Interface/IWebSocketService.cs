@@ -11,7 +11,7 @@ namespace LeneRapraelBot.Interface
     {
         public void Connect();
         public void Disconnect();
-        public void Send(ClientWebSocket ws, string content);
-        public string Receive(ClientWebSocket ws);
+        public void Send(string content);
+        public string Receive();
     }
 }

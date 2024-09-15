@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace LeneRapraelBot.Utils
 {
-    public class WsClient : IWebSocketService
+    internal class WsClient : IWebSocketService
     {
         //logger
         log4net.ILog log = log4net.LogManager.GetLogger("ClientWesocketLogger");
@@ -48,22 +48,51 @@ namespace LeneRapraelBot.Utils
             }
         }
 
-        public void Send(ClientWebSocket ws, string content)
+        public string Send(string content)
         {
-            ArraySegment<byte> bufferArray = new ArraySegment<byte>(Encoding.UTF8.GetBytes(content));//encoding contents to bytes
-            Task sendTask = ws.SendAsync(bufferArray, WebSocketMessageType.Binary, true, CancellationToken.None);//TODO:先预设定为一个包，后期可能会改
-            sendTask.Wait();
+            if (Ws.State == WebSocketState.Connecting)
+            {
+                ArraySegment<byte> bufferArray = new ArraySegment<byte>(Encoding.UTF8.GetBytes(content));//encoding contents to bytes
+                Task sendTask = Ws.SendAsync(bufferArray, WebSocketMessageType.Binary, true, CancellationToken.None);//TODO:先预设定为一个包，后期可能会改
+                sendTask.Wait();
+
+                if (OnSend is not null)
+                {
+                    OnSend.Invoke(Ws, content);
+                }
+
+                return "sending request sent";
+            }
+            else
+            {
+                log.Error("Connection Lost, cannot send");
+                return "Connection Lost, cannot send";
+            }
         }
 
-        public string Receive(ClientWebSocket ws)
+        public string Receive()
         {
-            byte[] buffer = new byte[2048 * 2];
-            ArraySegment<byte> receivedBufferArray = new ArraySegment<byte>(buffer);
-            Task receiveTask = ws.ReceiveAsync(receivedBufferArray, CancellationToken.None);
-            receiveTask.Wait();//receive bytes
+            if (Ws.State == WebSocketState.Connecting)
+            {
+                byte[] buffer = new byte[2048 * 2];
+                ArraySegment<byte> receivedBufferArray = new ArraySegment<byte>(buffer);
+                Task receiveTask = Ws.ReceiveAsync(receivedBufferArray, CancellationToken.None);
+                receiveTask.Wait();//receive bytes
 
-            string receiveTxt = Encoding.UTF8.GetString(receivedBufferArray);//decoding bytes
-            return receiveTxt;
+                string receiveTxt = Encoding.UTF8.GetString(receivedBufferArray);//decoding bytes
+
+                if (OnReceive is not null)
+                {
+                    OnReceive.Invoke(Ws, receiveTxt);
+                }
+
+                return receiveTxt;
+            }
+            else
+            {
+                log.Error("Connection Lost, cannot receive");
+                return "Connection Lost, cannot receive";
+            }
         }
 
         public void Connect()
@@ -74,12 +103,27 @@ namespace LeneRapraelBot.Utils
             {
                 while (true)
                 {
-                    //OnReceive(Ws, Receive(Ws));
-                    string data = Receive(Ws);
-                    log.Info($"\n{data}");
-                    Console.WriteLine(data);
+                    string data = Receive();
                 }
             });
+
+            if (OnConnect is not null)
+            {
+                OnConnect.Invoke(Ws, "connection established");
+            }
+        }
+
+        public void Disconnect()
+        {
+            Task outputCloseTask = Ws.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "Normally closed", CancellationToken.None);
+            outputCloseTask.Wait();
+            Task disconnectTask = Ws.CloseAsync(WebSocketCloseStatus.NormalClosure, "Normally closed", CancellationToken.None);
+            disconnectTask.Wait();
+
+            if (OnDisconnect is not null)
+            {
+                OnDisconnect.Invoke(Ws, "connection disconnected");
+            }
         }
 
         /// <summary>
@@ -88,7 +132,7 @@ namespace LeneRapraelBot.Utils
         /// <param name="content">string</param>
         public void SendMsg(string content)
         {
-            Send(Ws, content);
+            Send(content);
         }
 
         public void WaitInputSend()
@@ -99,17 +143,23 @@ namespace LeneRapraelBot.Utils
                 {
                     Console.WriteLine("Waiting Input");
                     string? content = Console.ReadLine();
+
                     SendMsg(content);
+
+                    string? str = Console.ReadLine();
+
+                    int i = 0;
+
+                    if (int.TryParse(str, out i) && i == 1)
+                    {
+                        OnDisconnect += (s, e) =>
+                        {
+                            Console.WriteLine(e);
+                        };
+                        Disconnect();
+                    }
                 }
             });
         }
-
-
-        public void Disconnect()
-        {
-            throw new NotImplementedException();
-        }
-
-
     }
 }
